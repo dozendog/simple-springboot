@@ -15,19 +15,29 @@ import com.dozendog.simplespringboot.model.Employee;
 @Service
 public class EmployeeService {
 	
-	private final static Logger logger = LogManager.getLogger(EmployeeService.class);
+	private static Logger logger = LogManager.getLogger(EmployeeService.class);
 	
-	static HashMap<Integer, Employee> employeeMap = new HashMap<>();  
-	
-	static {  
-		employeeMap.put(1, new Employee(1, "Mr.", "John", "Wick","123/2 Rama9 35 Bangkok Thailand","30/11/1975","1234567890123","Thai","boogieman",new BigDecimal(200000),"male",0));  
-		employeeMap.put(2, new Employee(2, "Mr.", "Tony", "Stark","456/1 Rama4 102 Bangkok Thailand","30/11/1974","1234567890001","Thai","engineer",new BigDecimal(300000),"male",0));  
-	 
-	} 
+	protected static HashMap<Integer, Employee> employeeMap = new HashMap<>();  
 	
 
-	@Cacheable(cacheNames="demoCache", key="#id")  
-	public static ArrayList<Employee> findAll() {
+	
+	//@Cacheable(cacheNames="demoCache")  
+	public boolean initData() {
+		
+		logger.info("calling EmployeeService.initData()");
+		
+		boolean success=false;
+	
+		//if ID is exist, then update employee data
+		employeeMap.put(1, new Employee(1, "Mr.", "John", "Wick","123/2 Rama9 35 Bangkok Thailand","30/11/1975","1234567890123","Thai","boogieman",new BigDecimal(200000),"male",0));  
+		employeeMap.put(2, new Employee(2, "Mr.", "Tony", "Stark","456/1 Rama4 102 Bangkok Thailand","30/11/1974","1234567890001","Thai","engineer",new BigDecimal(300000),"male",0));  
+		success = true;
+		
+		return success;
+	}
+	
+ 
+	public ArrayList<Employee> findAll() {
 		
 		logger.info("calling EmployeeService.findAll()");
 		
@@ -44,8 +54,8 @@ public class EmployeeService {
 		return list;
 	}
 	
-	@Cacheable(cacheNames="demoCache", key="#id")  
-	public static Employee find(int id) {
+
+	public Employee find(int id) {
 		
 		logger.info("calling EmployeeService.find():"+id);
 		
@@ -57,9 +67,9 @@ public class EmployeeService {
 		}
 		return employee;
 	}
+
 	
-	@Cacheable(cacheNames="demoCache", key="#id")  
-	public static boolean insert(Employee employee) {
+	public boolean insert(Employee employee) {
 		
 		logger.info("calling EmployeeService.insert():"+employee.getId());
 		
@@ -77,8 +87,8 @@ public class EmployeeService {
 		return success;
 	}
 	
-	@Cacheable(cacheNames="demoCache", key="#id")  
-	public static boolean update(Employee employee) {
+	
+	public boolean update(Employee employee) {
 		
 		logger.info("calling EmployeeService.update():"+employee.getId());
 		
@@ -96,8 +106,8 @@ public class EmployeeService {
 		return success;
 	}
 	
-	@Cacheable(cacheNames="demoCache", key="#id")  
-	public static boolean delete(int id) {
+	//@Cacheable(cacheNames="demoCache", key="#id")  
+	public boolean delete(int id) {
 		
 		logger.info("calling EmployeeService.delete():"+id);
 		

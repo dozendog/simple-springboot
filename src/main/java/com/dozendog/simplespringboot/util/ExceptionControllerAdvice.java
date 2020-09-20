@@ -16,7 +16,7 @@ public class ExceptionControllerAdvice {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> exceptionHandler(Exception ex) {
-        logger.error(ExceptionUtils.getStackTrace(new Exception("Exception")));
+        logger.error(ExceptionUtils.getStackTrace(ex));
         return new ResponseEntity<>( HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
