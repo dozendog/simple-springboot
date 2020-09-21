@@ -3,10 +3,14 @@ package com.dozendog.simplespringboot.service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import com.dozendog.simplespringboot.model.Employee;
@@ -17,41 +21,18 @@ public class EmployeeService {
 	
 	private static Logger logger = LogManager.getLogger(EmployeeService.class);
 	
-	protected static HashMap<Integer, Employee> employeeMap = new HashMap<>();  
-	
+    @Autowired
+    private JdbcTemplate jtm;
 
 	
-	//@Cacheable(cacheNames="demoCache")  
-	public boolean initData() {
-		
-		logger.info("calling EmployeeService.initData()");
-		
-		boolean success=false;
-	
-		//if ID is exist, then update employee data
-		employeeMap.put(1, new Employee(1, "Mr.", "John", "Wick","123/2 Rama9 35 Bangkok Thailand","30/11/1975","1234567890123","Thai","boogieman",new BigDecimal(200000),"male",0));  
-		employeeMap.put(2, new Employee(2, "Mr.", "Tony", "Stark","456/1 Rama4 102 Bangkok Thailand","30/11/1974","1234567890001","Thai","engineer",new BigDecimal(300000),"male",0));  
-		success = true;
-		
-		return success;
-	}
-	
- 
-	public ArrayList<Employee> findAll() {
+	public List<Employee> findAll() {
 		
 		logger.info("calling EmployeeService.findAll()");
-		
-		ArrayList<Employee> list = null;
-		
-		//if data in cache is null, then return null
-		if(employeeMap!=null&&!employeeMap.isEmpty()) {
-			
-			list = new ArrayList<Employee>();
-			for (Employee employee : employeeMap.values()) {
-				list.add(employee);
-			}
-		}
-		return list;
+
+        String sql = "SELECT * FROM employee";
+        List<Employee> list = jtm.query(sql, new BeanPropertyRowMapper<>(Employee.class));
+        
+        return list;
 	}
 	
 
@@ -59,12 +40,9 @@ public class EmployeeService {
 		
 		logger.info("calling EmployeeService.find():"+id);
 		
-		Employee employee = null;
-		
-		//if data in cache is null, then return null
-		if(employeeMap!=null&&!employeeMap.isEmpty()) {
-			employee = employeeMap.get(id);
-		}
+        String sql = "SELECT * FROM employee WHERE id = ?";
+        Employee employee = jtm.queryForObject(sql, new Object[]{id},new BeanPropertyRowMapper<>(Employee.class));
+
 		return employee;
 	}
 
@@ -75,14 +53,24 @@ public class EmployeeService {
 		
 		boolean success=false;
 		
-		//if data in cache is null, then return null
-		if(employeeMap!=null) {
-			
-			//if ID is not exist, then add a new employee
-			if(!employeeMap.containsKey(employee.getId())) {
-				employeeMap.put(employee.getId(),employee);
-				success=true;
-			}
+		String sql = "INSERT INTO employee(firstname,surename,titlename,address,dateofbirth,citizenid,"
+				+ "nationality,position,salary,gendar,status) VALUES(?,?,?,?,?,?,?,?,?,?,?)";
+		
+		int status = jtm.update(sql, 
+				employee.getFirstName(),
+				employee.getSureName(),
+				employee.getTitleName(),
+				employee.getAddress(),
+				employee.getDateOfBirth(),
+				employee.getCitizenid(),
+				employee.getNationality(),
+				employee.getPosition(),
+				employee.getSalary(),
+				employee.getGendar(),
+				employee.getStatus());
+		
+		if(status>0){
+			success=true;
 		}
 		return success;
 	}
@@ -94,14 +82,25 @@ public class EmployeeService {
 		
 		boolean success=false;
 		
-		//if data in cache is null, then return null
-		if(employeeMap!=null) {
-			
-			//if ID is exist, then update employee data
-			if(employeeMap.containsKey(employee.getId())) {
-				employeeMap.put(employee.getId(),employee);
-				success=true;
-			}
+		String sql = "UPDATE employee SET firstname=?,surename=?,titlename=?,address=?,dateofbirth=?,citizenid=?,"
+				+ "nationality=?,position=?,salary=?,gendar=?,status=? WHERE id=?";
+		
+		int status = jtm.update(sql, 
+				employee.getFirstName(),
+				employee.getSureName(),
+				employee.getTitleName(),
+				employee.getAddress(),
+				employee.getDateOfBirth(),
+				employee.getCitizenid(),
+				employee.getNationality(),
+				employee.getPosition(),
+				employee.getSalary(),
+				employee.getGendar(),
+				employee.getStatus(),
+				employee.getId());
+		
+		if(status>0){
+			success=true;
 		}
 		return success;
 	}
@@ -111,16 +110,12 @@ public class EmployeeService {
 		
 		logger.info("calling EmployeeService.delete():"+id);
 		
-		boolean success=false;
+		boolean success=false;	
+		String sql = "DELETE * FROM employee WHERE id = ?";
 		
-		//if data in cache is null, then return null
-		if(employeeMap!=null) {
-			
-			//if ID is exist, then update employee data
-			if(employeeMap.containsKey(id)) {
-				employeeMap.remove(id);
-				success=true;
-			}
+		int status = jtm.update(sql,id);	
+		if(status>0){
+			success=true;
 		}
 		return success;
 	}

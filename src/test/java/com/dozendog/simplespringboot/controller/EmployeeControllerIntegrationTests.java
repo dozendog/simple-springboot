@@ -59,18 +59,7 @@ public class EmployeeControllerIntegrationTests {
     	return token;
 	}
     
-    
-    @Test
-	public void initEmployee_return_success() throws Exception {
-  
-	   
-    	//method & return value
-	 	given(employeeService.initData()).willReturn(true);
-	 
-	    mvc.perform(post("/service/v1/employee/initiate").header("Authorization", "Bearer " + obtainAccessToken()))
-	    	.andExpect(status().isCreated());
 
-	}
     
     
     @Test

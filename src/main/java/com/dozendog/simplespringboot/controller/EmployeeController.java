@@ -1,6 +1,7 @@
 package com.dozendog.simplespringboot.controller;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,22 +31,7 @@ public class EmployeeController {
 	private  Logger logger = LogManager.getLogger(this.getClass());
 	
 	
-	
-    @RequestMapping(value = "/employee/initiate", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RsBodyEmployeeList> initEmployee(@RequestHeader HttpHeaders headers) throws Exception {
-  
-    	logger.info("calling EmployeeController.initEmployee()");
-    	
-    	//business logic
-    	boolean success = employeeService.initData();
- 	
-        HttpStatus status = null;
-        
-        // check result for set HttpStatus
-        status = !success ? HttpStatus.BAD_REQUEST : HttpStatus.CREATED;
-        
-        return new ResponseEntity<>(status);
-    }
+
     
 
     @RequestMapping(value = "/employee/all", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -54,7 +40,7 @@ public class EmployeeController {
     	logger.info("calling EmployeeController.findAllEmployee()");
     	
     	//business logic
-    	ArrayList<Employee> employeeList = employeeService.findAll();
+    	List<Employee> employeeList = employeeService.findAll();
     	
     	RsBodyEmployeeList response = new RsBodyEmployeeList();
     	response.setEmployeeList(employeeList);
