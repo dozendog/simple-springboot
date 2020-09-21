@@ -1,14 +1,11 @@
 package com.dozendog.simplespringboot.service;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
+
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -111,7 +108,7 @@ public class EmployeeService {
 		logger.info("calling EmployeeService.delete():"+id);
 		
 		boolean success=false;	
-		String sql = "DELETE * FROM employee WHERE id = ?";
+		String sql = "DELETE FROM employee WHERE id = ?";
 		
 		int status = jtm.update(sql,id);	
 		if(status>0){

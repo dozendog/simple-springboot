@@ -7,7 +7,7 @@ A simple springboot RestAPI server with java8
 - jwt
 - swagger (http://127.0.0.1:8080/swagger-ui.html)
 - log4j2
-- ehcache
+- H2 database
 - unit test
 - docker
 
