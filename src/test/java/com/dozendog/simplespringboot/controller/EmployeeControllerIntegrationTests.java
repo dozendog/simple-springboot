@@ -6,28 +6,27 @@ import java.util.ArrayList;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.json.JacksonJsonParser;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-
+import org.springframework.test.web.servlet.ResultActions;
 
 import com.dozendog.simplespringboot.model.Employee;
 import com.dozendog.simplespringboot.service.EmployeeService;
 
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import org.junit.*;
-import org.junit.runner.*;
+import org.junit.jupiter.api.Test;
 
 import static org.mockito.BDDMockito.*;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Matchers.isA;
 
-
-@RunWith(SpringRunner.class)
 @WebMvcTest(EmployeeController.class)
-public class EmployeeControllerTest {
+public class EmployeeControllerIntegrationTests {
 	
     @Autowired
     private MockMvc mvc;
@@ -35,15 +34,40 @@ public class EmployeeControllerTest {
     @MockBean
 	private EmployeeService employeeService;
     
+    private static String token;
+    
+    
+    private String obtainAccessToken() throws Exception {
+    	
+    	if(token==null) {
+    		
+        	String content = "{\"username\":\"user\",\"password\":\"password\"}";
+       	 
+    	    ResultActions result 
+    	      = mvc.perform(post("/authentication")
+    	        .content(content)
+    	        .contentType(MediaType.APPLICATION_JSON)
+    	        .accept(MediaType.APPLICATION_JSON))
+    	        .andExpect(status().isOk());
+    	 
+    	    String resultString = result.andReturn().getResponse().getContentAsString();
+    	 
+    	    JacksonJsonParser jsonParser = new JacksonJsonParser();
+    	    token = jsonParser.parseMap(resultString).get("token").toString();
+    	}
+   	 
+    	return token;
+	}
     
     
     @Test
 	public void initEmployee_return_success() throws Exception {
+  
 	   
     	//method & return value
 	 	given(employeeService.initData()).willReturn(true);
 	 
-	    mvc.perform(post("service/v1/employee/initiate"))
+	    mvc.perform(post("/service/v1/employee/initiate").header("Authorization", "Bearer " + obtainAccessToken()))
 	    	.andExpect(status().isCreated());
 
 	}
@@ -60,11 +84,11 @@ public class EmployeeControllerTest {
     	//method & return value
 	 	given(employeeService.findAll()).willReturn(employeeList);
 	 
-	    mvc.perform(get("service/v1/employee/all"))
+	    mvc.perform(get("/service/v1/employee/all").header("Authorization", "Bearer " + obtainAccessToken()))
 	      	.andExpect(status().isOk())
-	      	.andExpect(jsonPath("$", hasSize(1)))
-	      	.andExpect(jsonPath("$[0].firstName", is("John")))
-	      	.andExpect(jsonPath("$[1].sureName", is("Stark")));
+	      	.andExpect(jsonPath("$.employeeList", hasSize(2)))
+	      	.andExpect(jsonPath("$.employeeList[0].firstName", is("John")))
+	      	.andExpect(jsonPath("$.employeeList[1].sureName", is("Stark")));
 
 	}  
     
@@ -80,10 +104,10 @@ public class EmployeeControllerTest {
     	//method & return value
 	 	given(employeeService.find(id)).willReturn(employee);
 	 
-	    mvc.perform(get("service/v1/employee/3"))
+	    mvc.perform(get("/service/v1/employee/3").header("Authorization", "Bearer " + obtainAccessToken()))
 	      	.andExpect(status().isOk())
-	      	.andExpect(jsonPath("$", hasSize(1)))
-	      	.andExpect(jsonPath("$firstName", is("John")));
+	      	.andExpect(jsonPath("$.employee.id", is(3)))
+	      	.andExpect(jsonPath("$.employee.firstName", is("John")));
 
 	}  
 
@@ -91,13 +115,16 @@ public class EmployeeControllerTest {
     @Test
 	public void addNewEmployee_return_success() throws Exception {
     	
-    	String content="{ \"employee\": { \"id\": 2, \"titleName\": \"Mr.\", \"firstName\": \"Tony\", \"sureName\": \"Stark\", \"address\": \"456/1 Rama4 102 Bangkok Thailand\", \"dateOfBirth\": \"30/11/1974\", \"citizenid\": \"1234567890001\", \"nationality\": \"Thai\", \"position\": \"engineer\", \"salary\": 300000, \"gendar\": \"male\", \"status\": 0 } }";
+    	String content="{\"employee\":{\"id\":2,\"titleName\":\"Mr.\",\"firstName\":\"Tony\",\"sureName\":\"Stark\",\"address\":\"456/1 Rama4 102 Bangkok Thailand\",\"dateOfBirth\":\"30/11/1974\",\"citizenid\":\"1234567890001\",\"nationality\":\"Thai\",\"position\":\"engineer\",\"salary\":300000,\"gendar\":\"male\",\"status\":0}}";
     	Employee employee = new Employee(2, "Mr.", "Tony", "Stark","456/1 Rama4 102 Bangkok Thailand","30/11/1974","1234567890001","Thai","engineer",new BigDecimal(300000),"male",0);
     	
     	//method & return value
-	 	given(employeeService.insert(employee)).willReturn(true);
+	 	given(employeeService.insert(isA(Employee.class))).willReturn(true);
 	 
-	    mvc.perform(post("service/v1/employee").contentType(MediaType.APPLICATION_JSON).content(content))
+	    mvc.perform(post("/service/v1/employee").header("Authorization", "Bearer " + obtainAccessToken())
+	    		.contentType(MediaType.APPLICATION_JSON)
+	    		.accept(MediaType.APPLICATION_JSON)
+	    		.content(content))
 	      	.andExpect(status().isCreated());
 
 	}  
@@ -106,13 +133,16 @@ public class EmployeeControllerTest {
     @Test
 	public void updateEmployee_return_success() throws Exception {
     	
-    	String content="{ \"employee\": { \"id\": 2, \"titleName\": \"Mr.\", \"firstName\": \"Tony2\", \"sureName\": \"Stark\", \"address\": \"456/1 Rama4 102 Bangkok Thailand\", \"dateOfBirth\": \"30/11/1974\", \"citizenid\": \"1234567890001\", \"nationality\": \"Thai\", \"position\": \"engineer\", \"salary\": 300000, \"gendar\": \"male\", \"status\": 0 } }";
+    	String content="{\"employee\":{\"id\":2,\"titleName\":\"Mr.\",\"firstName\":\"Tony2\",\"sureName\":\"Stark\",\"address\":\"456/1 Rama4 102 Bangkok Thailand\",\"dateOfBirth\":\"30/11/1974\",\"citizenid\":\"1234567890001\",\"nationality\":\"Thai\",\"position\":\"engineer\",\"salary\":300000,\"gendar\":\"male\",\"status\":0}}";
     	Employee employee = new Employee(2, "Mr.", "Tony2", "Stark","456/1 Rama4 102 Bangkok Thailand","30/11/1974","1234567890001","Thai","engineer",new BigDecimal(300000),"male",0);
     	
     	//method & return value
-	 	given(employeeService.update(employee)).willReturn(true);
+	 	given(employeeService.update(isA(Employee.class))).willReturn(true);
 	 
-	    mvc.perform(put("service/v1/employee").contentType(MediaType.APPLICATION_JSON).content(content))
+	    mvc.perform(put("/service/v1/employee").header("Authorization", "Bearer " + obtainAccessToken())
+	    		.contentType(MediaType.APPLICATION_JSON)
+	    		.accept(MediaType.APPLICATION_JSON)
+	    		.content(content))
 	      	.andExpect(status().isOk());
 
 	}  
@@ -126,7 +156,7 @@ public class EmployeeControllerTest {
     	//method & return value
 	 	given(employeeService.delete(id)).willReturn(true);
 	 
-	    mvc.perform(delete("service/v1/employee/3"))
+	    mvc.perform(delete("/service/v1/employee/3").header("Authorization", "Bearer " + obtainAccessToken()))
 	      	.andExpect(status().isOk());
 
 	}  
