@@ -1,5 +1,5 @@
 # simple-springboot
-A simple springboot RestAPI server with java8
+A simple springboot RestAPI server with java8 (for demo, not production grade)
 
 - RestAPI server
 - Springboot v2.3.4
